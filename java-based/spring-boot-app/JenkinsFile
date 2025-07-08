@@ -10,6 +10,7 @@ pipeline {
     IMAGE_TAG = 'latest'
     RELEASE_NAME = 'my-spring-app'
     CHART_DIR = 'java-based/spring-boot-app/helm'
+    SONAR_HOST_URL = 'http://localhost:9000'
   }
 
   stages {
@@ -18,6 +19,22 @@ pipeline {
       steps {
         echo 'Checkout successfully completed'
         checkout scm
+      }
+    }
+
+    stage('SonarQube Scan') {
+      steps {
+        echo 'Starting SonarQube Analysis'
+        dir('java-based/spring-boot-app') {
+          withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
+            sh """
+              mvn sonar:sonar \
+                -Dsonar.projectKey=spring-boot-app \
+                -Dsonar.host.url=${SONAR_HOST_URL} \
+                -Dsonar.login=$SONAR_TOKEN
+            """
+          }
+        }
       }
     }
 
@@ -51,6 +68,16 @@ pipeline {
       }
     }
 
+    stage('Trivy Image Scan') {
+      steps {
+        echo 'Starting Trivy Scan'
+        script {
+          sh "trivy image ${IMAGE_NAME}:${IMAGE_TAG} || true"
+        }
+        echo 'Trivy Scan Completed'
+      }
+    }
+
     stage('Push to DockerHub') {
       steps {
         script {
@@ -71,7 +98,6 @@ pipeline {
         withCredentials([file(credentialsId: 'Helm-Kube-cred', variable: 'KUBECONFIG')]) {
           dir("${CHART_DIR}") {
             script {
-              // Replace image tag in values.yaml if needed
               sh "helm upgrade --install ${RELEASE_NAME} . --set image.repository=${IMAGE_NAME} --set image.tag=${IMAGE_TAG}"
             }
           }
