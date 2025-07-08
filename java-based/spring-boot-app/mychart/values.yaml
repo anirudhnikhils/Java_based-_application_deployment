@@ -1,0 +1,20 @@
+# values.yaml
+
+replicaCount: 1
+
+image:
+  repository: anirudhnikhil/spring   # ✅ Ye tera DockerHub repo name
+  pullPolicy: IfNotPresent
+  tag: "latest"                      # ✅ Jenkins se override hoga
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
