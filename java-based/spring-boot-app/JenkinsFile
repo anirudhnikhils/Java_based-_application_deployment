@@ -4,6 +4,11 @@ pipeline
     tools{
         maven 'Maven'
     }
+ environment {
+    IMAGE_NAME = 'anirudhnikhil/spring'
+    IMAGE_TAG = 'latest'
+  }
+
     stages{
         stage('checkout')
         {
@@ -21,7 +26,7 @@ pipeline
             }
             
         }    
-        stage('test')
+       stage('test')
         {
             steps{
                 echo 'test started'
@@ -29,7 +34,30 @@ pipeline
                 echo 'test succed'
             }
             
-        }    
+        }  
+stage('Build Docker Image') {
+      steps {
+        script {
+          sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+        }
+      }
+    }
+
+    stage('Push to DockerHub') {
+      steps {
+        script {
+          withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+            sh """
+              echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+              docker push ${IMAGE_NAME}:${IMAGE_TAG}
+              docker logout
+            """
+          }
+        }
+      }
+    }
+  }
+}
     }
     
 }
