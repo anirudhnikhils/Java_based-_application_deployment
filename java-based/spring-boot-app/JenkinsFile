@@ -16,7 +16,7 @@ pipeline
         {
             steps{
                 echo 'build started'
-                sh 'cd jjava-based/spring-boot-app'
+                sh 'cd java-based/spring-boot-app'
                 echo 'build succed'
             }
             
