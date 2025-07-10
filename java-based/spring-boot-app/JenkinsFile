@@ -22,22 +22,6 @@ pipeline {
       }
     }
 
-    stage('SonarQube Scan') {
-      steps {
-        echo 'Starting SonarQube Analysis'
-        dir('java-based/spring-boot-app') {
-          withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
-            sh """
-              mvn sonar:sonar \
-                -Dsonar.projectKey=spring-boot-app \
-                -Dsonar.host.url=${SONAR_HOST_URL} \
-                -Dsonar.login=$SONAR_TOKEN
-            """
-          }
-        }
-      }
-    }
-
     stage('Build') {
       steps {
         echo 'Build started'
@@ -55,6 +39,22 @@ pipeline {
           sh 'mvn test'
         }
         echo 'Tests succeeded'
+      }
+    }
+
+    stage('SonarQube Scan') {
+      steps {
+        echo 'Starting SonarQube Analysis'
+        dir('java-based/spring-boot-app') {
+          withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
+            sh """
+              mvn sonar:sonar \
+                -Dsonar.projectKey=spring-boot-app \
+                -Dsonar.host.url=${SONAR_HOST_URL} \
+                -Dsonar.login=$SONAR_TOKEN
+            """
+          }
+        }
       }
     }
 
